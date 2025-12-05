@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式霓虹温度计</title>
+    <style>
+        :root {
+            --bg-color: #0f1015;
+            --tube-width: 80px;
+            --tube-height: 400px;
+            --liquid-hue: 200; /* 初始蓝色 */
+            --liquid-height: 20%;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* 主容器 */
+        .container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* 温度计外壳 (玻璃管) */
+        .thermometer {
+            width: var(--tube-width);
+            height: var(--tube-height);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            box-shadow: 
+                0 0 20px rgba(0, 0, 0, 0.5),
+                inset 0 0 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        /* 刻度线容器 */
+        .scale {
+            position: absolute;
+            top: 0;
+            left: -50px;
+            width: calc(100% + 100px);
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .tick {
+            position: absolute;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            width: 15px;
+        }
+        .tick.left { left: 40px; }
+        .tick.right { right: 40px; }
+        .tick.major { width: 25px; background: rgba(255, 255, 255, 0.6); }
+        .tick-label {
+            position: absolute;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            transform: translateY(-50%);
+        }
+        .tick-label.left { left: 10px; }
+        .tick-label.right { right: 10px; }
+
+        /* 液体部分 */
+        .liquid {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            right: 4px;
+            height: var(--liquid-height);
+            background: linear-gradient(to top, 
+                hsl(var(--liquid-hue), 100%, 40%), 
+                hsl(var(--liquid-hue), 100%, 60%)
+            );
+            border-radius: 0 0 40px 40px;
+            /* 顶部圆角随高度变化稍微调整，这里为了简化保持底部圆角 */
+            border-radius: 
+                calc(var(--tube-width)/2) calc(var(--tube-width)/2) 
+                40px 40px;
+            
+            transition: height 0.1s ease-out, background 0.2s;
+            box-shadow: 
+                0 0 30px hsl(var(--liquid-hue), 100%, 50%),
+                inset 0 0 20px rgba(255, 255, 255, 0.5);
+            
+            /* 环境辉光特效 */
+            filter: drop-shadow(0 0 15px hsl(var(--liquid-hue), 100%, 50%));
+            overflow: hidden; /* 隐藏溢出的气泡 */
+        }
+
+        /* 液体顶部的亮面 (Meniscus) */
+        .liquid::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            right: 10px;
+            height: 20px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0));
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+
+        /* 气泡动画特效 */
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            bottom: -10px;
+            animation: rise 2s infinite ease-in;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-300px) scale(1.2); opacity: 0; }
+        }
+
+        /* 数字显示 */
+        .readout {
+            font-size: 4rem;
+            font-weight: bold;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 20px hsl(var(--liquid-hue), 100%, 50%);
+            margin-top: 20px;
+        }
+        .unit {
+            font-size: 1.5rem;
+            vertical-align: super;
+            opacity: 0.7;
+        }
+
+        /* 隐形滑块覆盖在整个温度计上 */
+        input[type="range"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: ns-resize; /* 上下拖动的鼠标图标 */
+            z-index: 100;
+        }
+
+        /* 背景氛围灯 */
+        .ambient-light {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, hsl(var(--liquid-hue), 100%, 20%) 0%, transparent 70%);
+            z-index: 1;
+            opacity: 0.6;
+            pointer-events: none;
+            transition: background 0.2s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="ambient-light"></div>
+
+    <div class="container">
+        <div class="scale" id="scale-container">
+            <div style="position: absolute; top: -30px; left: 50px; font-weight: bold;">°C</div>
+            <div style="position: absolute; top: -30px; right: 50px; font-weight: bold;">°F</div>
+        </div>
+
+        <div class="thermometer">
+            <div class="liquid" id="liquid">
+                </div>
+        </div>
+
+        <input type="range" id="temp-control" min="-30" max="50" value="0" step="0.5" orient="vertical">
+
+        <div class="readout">
+            <span id="temp-val">32</span><span class="unit">°F</span>
+        </div>
+    </div>
+
+    <script>
+        const rangeInput = document.getElementById('temp-control');
+        const liquid = document.getElementById('liquid');
+        const tempValDisplay = document.getElementById('temp-val');
+        const root = document.documentElement;
+        const scaleContainer = document.getElementById('scale-container');
+
+        // 配置
+        const minTempC = -30;
+        const maxTempC = 50;
+
+        // 生成刻度线 (JS 生成比 HTML 手写更整洁)
+        function generateScale() {
+            const steps = 8; // 大刻度数量
+            for (let i = 0; i <= steps; i++) {
+                const pct = (i / steps) * 100;
+                const topPos = 100 - pct; // CSS top %
+                
+                // 摄氏度数值
+                const valC = minTempC + (i / steps) * (maxTempC - minTempC);
+                // 华氏度数值
+                const valF = (valC * 9/5) + 32;
+
+                // 创建左侧刻度 (C)
+                const tickL = document.createElement('div');
+                tickL.className = 'tick left major';
+                tickL.style.top = `${topPos}%`;
+                scaleContainer.appendChild(tickL);
+
+                const labelL = document.createElement('div');
+                labelL.className = 'tick-label left';
+                labelL.style.top = `${topPos}%`;
+                labelL.innerText = Math.round(valC);
+                scaleContainer.appendChild(labelL);
+
+                // 创建右侧刻度 (F)
+                const tickR = document.createElement('div');
+                tickR.className = 'tick right major';
+                tickR.style.top = `${topPos}%`;
+                scaleContainer.appendChild(tickR);
+
+                const labelR = document.createElement('div');
+                labelR.className = 'tick-label right';
+                labelR.style.top = `${topPos}%`;
+                labelR.innerText = Math.round(valF);
+                scaleContainer.appendChild(labelR);
+
+                // 小刻度 (在两个大刻度之间加4个小的)
+                if (i < steps) {
+                    for(let j=1; j<5; j++) {
+                        const subPct = pct + (j/5) * (100/steps);
+                        const subTop = 100 - subPct;
+                        
+                        const subTickL = document.createElement('div');
+                        subTickL.className = 'tick left';
+                        subTickL.style.top = `${subTop}%`;
+                        scaleContainer.appendChild(subTickL);
+
+                        const subTickR = document.createElement('div');
+                        subTickR.className = 'tick right';
+                        subTickR.style.top = `${subTop}%`;
+                        scaleContainer.appendChild(subTickR);
+                    }
+                }
+            }
+        }
+
+        // 气泡生成系统
+        function createBubbles() {
+            const bubble = document.createElement('div');
+            bubble.classList.add('bubble');
+            
+            // 随机大小和位置
+            const size = Math.random() * 8 + 2 + 'px';
+            bubble.style.width = size;
+            bubble.style.height = size;
+            bubble.style.left = Math.random() * 80 + '%';
+            
+            // 随机动画速度
+            bubble.style.animationDuration = (Math.random() * 1 + 1) + 's';
+            
+            liquid.appendChild(bubble);
+
+            // 动画结束后移除元素
+            setTimeout(() => {
+                bubble.remove();
+            }, 2000);
+        }
+
+        // 主更新函数
+        function updateTemperature() {
+            const valC = parseFloat(rangeInput.value);
+            const valF = Math.round((valC * 9/5) + 32);
+
+            // 1. 计算高度百分比
+            // 把数值映射到 0% - 100%
+            const percent = ((valC - minTempC) / (maxTempC - minTempC)) * 100;
+            // 限制在 5% 到 98% 之间以保持美观
+            const visualHeight = Math.max(5, Math.min(98, percent));
+
+            // 2. 计算颜色 (Hue)
+            // 冷 (-30C) -> Blue (220)
+            // 热 (50C) -> Red (0)
+            // 简单的线性插值
+            const maxHue = 220;
+            const minHue = 0;
+            const hue = maxHue - (percent / 100) * (maxHue - minHue);
+
+            // 3. 更新 CSS 变量
+            root.style.setProperty('--liquid-height', `${visualHeight}%`);
+            root.style.setProperty('--liquid-hue', hue);
+
+            // 4. 更新文字
+            tempValDisplay.innerText = valF;
+
+            // 5. 根据温度调整气泡产生频率
+            // 温度越高，气泡越多
+            // 这个逻辑在 setInterval 里体现，这里不需要做
+        }
+
+        // 初始化
+        generateScale();
+        updateTemperature();
+
+        // 事件监听
+        rangeInput.addEventListener('input', updateTemperature);
+
+        // 启动气泡循环
+        setInterval(() => {
+            // 获取当前温度百分比
+            const currentHeight = parseFloat(root.style.getPropertyValue('--liquid-height'));
+            // 只有当液体有一定高度时才产生气泡
+            if(currentHeight > 10) {
+                createBubbles();
+                // 如果温度很高（高度高），额外多产生几个气泡
+                if (currentHeight > 70) createBubbles();
+            }
+        }, 200);
+
+    </script>
+</body>
+</html>
