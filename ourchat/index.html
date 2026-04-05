@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>WeChat Clone</title>
+    
+    <link rel="manifest" href="manifest.json">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WeChat">
+    <link rel="apple-touch-icon" href="icon.png">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #111111;
+            --header-bg: #191919;
+            --nav-bg: #191919;
+            --cell-bg: #191919;
+            --text-primary: #ffffff;
+            --text-secondary: #787878;
+            --wechat-green: #07C160;
+            --separator: #222222;
+            --search-bg: #222222;
+            --popup-bg: #2C2C2C;
+            --my-bubble: #07C160;
+            --other-bubble: #2C2C2C;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
+        /* 核心修复：锁定 Body */
+        body, html {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            width: 100%; height: 100%; overflow: hidden; position: fixed; display: flex; flex-direction: column;
+        }
+
+        /* --- 页面容器 --- */
+        .page { flex: 1; overflow-y: auto; display: none; padding-top: 50px; padding-bottom: 60px; background-color: var(--bg-color); -webkit-overflow-scrolling: touch; }
+        .page.active { display: block; }
+
+        /* 滑动子页面 */
+        .sub-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); z-index: 500; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); display: flex; flex-direction: column; }
+        .sub-page.open { transform: translateX(0); }
+        .sub-page-content { flex: 1; overflow-y: auto; padding-top: 50px; }
+
+        /* --- Header --- */
+        header { position: fixed; top: 0; width: 100%; height: 50px; background-color: var(--header-bg); display: flex; justify-content: center; align-items: center; z-index: 400; font-weight: 600; font-size: 17px; border-bottom: 1px solid #222; user-select: none; }
+        header .actions { position: absolute; right: 15px; font-size: 18px; cursor: pointer; width: 30px; height: 50px; display: flex; align-items: center; justify-content: center; }
+        header .back-btn { position: absolute; left: 0; top: 0; height: 50px; padding-left: 15px; padding-right: 20px; display: flex; align-items: center; cursor: pointer; font-size: 18px; }
+
+        /* --- 登录页面样式 --- */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            z-index: 2000; display: flex; flex-direction: column;
+            padding: 20px;
+        }
+        .login-header { height: 50px; display: flex; align-items: center; color: var(--text-secondary); font-size: 16px; }
+        .login-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 100px; }
+        .login-avatar-box { width: 100px; height: 100px; background-color: white; border-radius: 8px; margin-bottom: 20px; }
+        .login-username { font-size: 22px; color: var(--text-primary); margin-bottom: 40px; font-weight: 500; }
+        .login-btn { width: 200px; height: 48px; background-color: var(--wechat-green); color: white; font-size: 17px; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .login-btn:active { opacity: 0.8; }
+        .login-footer { position: absolute; bottom: 40px; width: 100%; left:0; display: flex; justify-content: center; gap: 20px; color: #576B95; font-size: 14px; }
+
+        /* --- 聊天页面特殊布局 (Flex Fix) --- */
+        #chat-detail { display: flex; flex-direction: column; padding-top: 0; padding-bottom: 0; }
+        #chat-detail header { position: relative; flex-shrink: 0; }
+        .chat-bubbles { flex: 1; overflow-y: scroll; padding: 15px; display: flex; flex-direction: column; gap: 15px; background-color: #000; padding-bottom: 20px; -webkit-overflow-scrolling: touch; }
+        .chat-footer { position: relative; flex-shrink: 0; width: 100%; height: 55px; background-color: #191919; border-top: 1px solid #333; display: flex; align-items: center; padding: 0 10px; z-index: 501; }
+
+        /* --- 通用组件 --- */
+        .search-container { padding: 10px; background-color: var(--header-bg); }
+        .search-wrapper { background-color: var(--search-bg); border-radius: 6px; height: 36px; display: flex; align-items: center; padding: 0 10px; }
+        .real-search-input { background: transparent; border: none; color: white; flex: 1; font-size: 14px; outline: none; }
+        
+        .list-group { margin-top: 8px; background-color: var(--cell-bg); }
+        .list-item { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--separator); background-color: var(--cell-bg); cursor: pointer; }
+        .list-item:active { background-color: #222; }
+        .list-item.no-border { border-bottom: none; }
+        .section-header { padding: 8px 16px; font-size: 12px; color: var(--text-secondary); background-color: var(--bg-color); }
+        .avatar { width: 44px; height: 44px; border-radius: 6px; background-color: #333; margin-right: 12px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .content { flex: 1; min-width: 0; }
+        .title { font-size: 16px; color: var(--text-primary); margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .subtitle { font-size: 13px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .time { font-size: 12px; color: #555; font-weight: normal; }
+        .arrow { color: #555; margin-left: 10px; font-size: 14px; }
+        .value-text { color: var(--text-secondary); font-size: 14px; margin-left: auto; }
+        .icon-box { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
+
+        .bubble-row { display: flex; align-items: flex-start; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .bubble-row.me { flex-direction: row-reverse; }
+        .bubble-avatar { width: 40px; height: 40px; border-radius: 4px; background-color: #444; margin: 0 10px; flex-shrink: 0; display:flex; align-items:center; justify-content:center; color:#888;}
+        .bubble-content { max-width: 70%; padding: 10px 14px; border-radius: 4px; font-size: 16px; line-height: 1.4; position: relative; word-wrap: break-word; }
+        .me .bubble-content { background-color: var(--my-bubble); color: #000; }
+        .other .bubble-content { background-color: var(--other-bubble); color: white; }
+        .chat-input { flex: 1; height: 36px; background-color: #2C2C2C; border: none; border-radius: 4px; margin: 0 10px; color: white; padding: 0 10px; font-size: 16px; outline: none;}
+        .chat-icon { font-size: 26px; color: var(--text-primary); padding: 0 5px; cursor: pointer; }
+
+        nav { position: fixed; bottom: 0; width: 100%; height: 60px; background-color: var(--nav-bg); border-top: 1px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 300; padding-bottom: 10px; user-select: none; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: var(--text-secondary); cursor: pointer; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--wechat-green); }
+
+        .popup-menu { position: fixed; top: 50px; right: 10px; background-color: var(--popup-bg); border-radius: 8px; width: 160px; display: none; flex-direction: column; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.5); padding: 5px 0; }
+        .popup-menu.show { display: flex; }
+        .popup-item { display: flex; align-items: center; padding: 12px 15px; color: white; border-bottom: 1px solid #383838; font-size: 14px; cursor: pointer;}
+        .popup-item:active { background-color: #383838; }
+        .popup-item i { margin-right: 12px; width: 20px; text-align: center; }
+        .btn-cell { text-align: center; padding: 14px; background-color: var(--cell-bg); font-size: 16px; font-weight: 500; margin-top: 8px; color: white; cursor: pointer; }
+        
+        .switch { width: 40px; height: 24px; background-color: #444; border-radius: 12px; position: relative; transition: 0.3s; }
+        .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background-color: white; border-radius: 50%; transition: 0.3s; }
+        .switch.on { background-color: var(--wechat-green); }
+        .switch.on::after { transform: translateX(16px); }
+
+        /* 初始隐藏 App 界面 */
+        .app-interface { display: none; }
+
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-header">WeChat</div>
+        <div class="login-body">
+            <div class="login-avatar-box"></div>
+            <div class="login-username">User</div>
+            <button class="login-btn" onclick="handleLogin()">Log In</button>
+        </div>
+        <div class="login-footer">
+            <span>Switch Account</span>
+            <span>|</span>
+            <span>Transfer Files Only</span>
+        </div>
+    </div>
+
+    <div id="app-container" class="app-interface">
+        
+        <header id="main-header">
+            <span id="header-title">WeChat</span>
+            <div class="actions" onclick="toggleMenu(event)"><i class="fas fa-plus-circle"></i></div>
+        </header>
+
+        <div id="plus-menu" class="popup-menu">
+            <div class="popup-item"><i class="fas fa-comment-dots"></i> New Chat</div>
+            <div class="popup-item"><i class="fas fa-user-plus"></i> Add Contacts</div>
+            <div class="popup-item"><i class="fas fa-qrcode"></i> Scan</div>
+            <div class="popup-item"><i class="fas fa-money-check-alt"></i> Money</div>
+        </div>
+
+        <div id="tab-chats" class="page active">
+            <div class="search-container">
+                <div class="search-wrapper"><i class="fas fa-search"></i><input type="search" id="google-search" class="real-search-input" placeholder="   Google Search..." autocomplete="off"></div>
+            </div>
+            
+            <div class="list-item" onclick="openChat()">
+                <div class="avatar" style="background:#2C2C2C;"><i class="fas fa-robot" style="color:#07C160;"></i></div>
+                <div class="content"><div class="title">AI Assistant <span class="time" id="chat-time-preview">Just now</span></div><div class="subtitle" id="chat-msg-preview">Online and ready to chat.</div></div>
+            </div>
+            
+            <div class="list-item">
+                <div class="avatar"><i class="fas fa-newspaper" style="color:#2a93ff;"></i></div>
+                <div class="content"><div class="title">Tencent News <span class="time">11:07 PM</span></div><div class="subtitle">Tech News: New AI models released...</div></div>
+            </div>
+
+            <div class="list-item">
+                <div class="avatar" style="background:white;"><i class="fab fa-apple" style="color:black; font-size:24px;"></i></div>
+                <div class="content">
+                    <div class="title">Apple <span class="time">9/10</span></div>
+                    <div class="subtitle">燃！燃！燃！燃！燃！燃！</div>
+                </div>
+            </div>
+
+            <div class="list-item">
+                <div class="avatar" style="background:#274E7E;"><i class="fas fa-file-alt" style="color:white;"></i></div>
+                <div class="content">
+                    <div class="title">Official Accounts <span class="time">11/2</span></div>
+                    <div class="subtitle">peisi0: New WiNdOwS is released...</div>
+                </div>
+            </div>
+
+            <div class="list-item">
+                <div class="avatar" style="background:#FA9D3B;"><i class="fas fa-bullhorn" style="color:white;"></i></div>
+                <div class="content">
+                    <div class="title">Service Notification <span class="time">8/21</span></div>
+                    <div class="subtitle">WeCom: Invitation to join...</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-contacts" class="page">
+            <div class="search-container"><div class="search-wrapper"><i class="fas fa-search"></i><input type="text" class="real-search-input" placeholder="Search" readonly></div></div>
+            
+            <div class="list-item"><div class="avatar" style="background:#FA9D3B;"><i class="fas fa-user-plus"></i></div><div class="content"><div class="title">New Friends</div></div></div>
+            <div class="list-item"><div class="avatar" style="background:#07C160;"><i class="fas fa-users"></i></div><div class="content"><div class="title">Group Chats</div></div></div>
+            <div class="list-item"><div class="avatar" style="background:#10AEFF;"><i class="fas fa-tag"></i></div><div class="content"><div class="title">Tags</div></div></div>
+            <div class="list-item"><div class="avatar" style="background:#10AEFF;"><i class="fas fa-building"></i></div><div class="content"><div class="title">Official Accounts</div></div></div>
+            <div class="list-item"><div class="avatar" style="background:#FA9D3B;"><i class="fas fa-shopping-bag"></i></div><div class="content"><div class="title">Service Accounts</div></div></div>
+
+            <div class="section-header">A</div>
+            <div class="list-item" onclick="openChat()">
+                <div class="avatar" style="background:#2C2C2C;"><i class="fas fa-robot" style="color:#07C160;"></i></div>
+                <div class="content"><div class="title">AI Assistant</div></div>
+            </div>
+
+            <div class="section-header">F</div>
+            <div class="list-item">
+                <div class="avatar" style="background:#07C160;"><i class="fas fa-folder-open"></i></div>
+                <div class="content"><div class="title">File Transfer</div></div>
+            </div>
+
+            <div class="section-header">W</div>
+            <div class="list-item">
+                <div class="avatar" style="background:#07C160;"><i class="fas fa-comment-dots"></i></div>
+                <div class="content"><div class="title">Weixin Team</div></div>
+            </div>
+        </div>
+
+        <div id="tab-discover" class="page">
+            <div class="list-group">
+                <div class="list-item"><div class="icon-box"><i class="fas fa-camera-retro" style="color:#fff;"></i></div><div class="content"><div class="title">Moments</div></div><i class="fas fa-chevron-right arrow"></i></div>
+            </div>
+            <div class="list-group">
+                <div class="list-item"><div class="icon-box"><i class="fas fa-infinity" style="color:#FA9D3B;"></i></div><div class="content"><div class="title">Channels</div></div><i class="fas fa-chevron-right arrow"></i></div>
+                <div class="list-item"><div class="icon-box"><i class="fas fa-music" style="color:#FA5151;"></i></div><div class="content"><div class="title">Listen</div></div><i class="fas fa-chevron-right arrow"></i></div>
+            </div>
+            <div class="list-group">
+                <div class="list-item"><div class="icon-box"><i class="fas fa-search" style="color:#FA9D3B;"></i></div><div class="content"><div class="title">Search</div></div><i class="fas fa-chevron-right arrow"></i></div>
+            </div>
+            <div class="list-group">
+                <div class="list-item"><div class="icon-box"><i class="fas fa-gamepad" style="color:#7D90A9;"></i></div><div class="content"><div class="title">Mini Programs</div></div><i class="fas fa-chevron-right arrow"></i></div>
+            </div>
+        </div>
+
+        <div id="tab-me" class="page">
+            <div class="list-group" style="margin-top:0; padding: 30px 0;">
+                <div class="list-item no-border" onclick="openSubPage('profile-page')">
+                    <div class="avatar" style="width:64px; height:64px; background:white; margin-left:10px;"></div>
+                    <div class="content" style="margin-left:10px;">
+                        <div class="title" style="font-size:20px; font-weight:bold;" id="me-display-name">User</div>
+                        <div class="subtitle" style="margin-top:8px;">Weixin ID: wxid_demo1234</div>
+                        <div class="subtitle" style="margin-top:4px; display:flex; align-items:center;">
+                            <span style="border:1px solid #444; border-radius:10px; padding:0 8px; margin-right:5px;">+ Status</span>
+                            <i class="far fa-circle"></i>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; margin-right:10px;">
+                        <i class="fas fa-qrcode" style="margin-right:10px; color:#777;"></i>
+                        <i class="fas fa-chevron-right arrow"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-group">
+                <div class="list-item">
+                    <div class="icon-box"><i class="far fa-check-circle" style="color:#07C160;"></i></div>
+                    <div class="content"><div class="title">Pay and Services</div></div>
+                    <i class="fas fa-chevron-right arrow"></i>
+                </div>
+            </div>
+
+            <div class="list-group">
+                <div class="list-item">
+                    <div class="icon-box"><i class="fas fa-cube" style="color:#fff;"></i></div>
+                    <div class="content"><div class="title">Favorites</div></div>
+                    <i class="fas fa-chevron-right arrow"></i>
+                </div>
+                <div class="list-item">
+                    <div class="icon-box"><i class="far fa-image" style="color:#fff;"></i></div>
+                    <div class="content"><div class="title">Moments</div></div>
+                    <i class="fas fa-chevron-right arrow"></i>
+                </div>
+                <div class="list-item">
+                    <div class="icon-box"><i class="far fa-smile" style="color:#FA9D3B;"></i></div>
+                    <div class="content"><div class="title">Sticker Gallery</div></div>
+                    <i class="fas fa-chevron-right arrow"></i>
+                </div>
+            </div>
+
+            <div class="list-group">
+                <div class="list-item" onclick="openSubPage('settings-page')"><div class="icon-box"><i class="fas fa-cog" style="color:#fff;"></i></div><div class="content"><div class="title">Settings</div></div><i class="fas fa-chevron-right arrow"></i></div>
+            </div>
+        </div>
+
+        <div id="chat-detail" class="sub-page">
+            <header>
+                <div class="back-btn" onclick="closeSubPage('chat-detail')"><i class="fas fa-chevron-left"></i></div>
+                <span>AI Assistant</span>
+                <div class="actions"><i class="fas fa-ellipsis-h"></i></div>
+            </header>
+            <div id="chat-container" class="chat-bubbles">
+                <div style="text-align:center; color:#555; font-size:12px; margin: 10px 0;">Today</div>
+                <div class="bubble-row other">
+                    <div class="bubble-avatar" style="background:#2C2C2C;"><i class="fas fa-robot" style="color:#07C160; font-size: 20px;"></i></div>
+                    <div class="bubble-content">Hi! I am the fully upgraded AI. I can tell jokes, chat, and remember context. 🧠</div>
+                </div>
+            </div>
+            <div class="chat-footer">
+                <i class="far fa-check-circle chat-icon"></i>
+                <input type="text" id="chat-input-field" class="chat-input" placeholder="Type a message..." autocomplete="off">
+                <i class="far fa-smile chat-icon"></i>
+                <i class="fas fa-plus-circle chat-icon"></i>
+            </div>
+        </div>
+
+        <div id="profile-page" class="sub-page">
+            <header><div class="back-btn" onclick="closeSubPage('profile-page')"><i class="fas fa-chevron-left"></i></div><span>My Profile</span></header>
+            <div class="sub-page-content">
+                <div class="list-group">
+                    <div class="list-item"><div class="content"><div class="title">Profile Photo</div></div><div class="avatar" style="width:36px; height:36px; background:white; margin:0;"></div><i class="fas fa-chevron-right arrow"></i></div>
+                    <div class="list-item" onclick="changeName()"><div class="content"><div class="title">Name</div></div><span class="value-text" id="profile-display-name">User</span><i class="fas fa-chevron-right arrow"></i></div>
+                    <div class="list-item"><div class="content"><div class="title">Weixin ID</div></div><span class="value-text">wxid_demo1234</span><i class="fas fa-chevron-right arrow"></i></div>
+                    <div class="list-item"><div class="content"><div class="title">My QR Code</div></div><i class="fas fa-qrcode" style="color:#777;"></i><i class="fas fa-chevron-right arrow"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings-page" class="sub-page">
+            <header><div class="back-btn" onclick="closeSubPage('settings-page')"><i class="fas fa-chevron-left"></i></div><span>Settings</span></header>
+            <div class="sub-page-content">
+                <div class="list-group">
+                    <div class="list-item"><div class="content"><div class="title">Account Security</div></div><i class="fas fa-chevron-right arrow"></i></div>
+                    <div class="list-item"><div class="content"><div class="title">General</div></div><i class="fas fa-chevron-right arrow"></i></div>
+                </div>
+                
+                <div class="list-group">
+                    <div class="list-item">
+                        <div class="content"><div class="title">Phone to Ear for Voice Messages</div></div>
+                        <div class="switch" onclick="this.classList.toggle('on')"></div>
+                    </div>
+                </div>
+
+                <div class="btn-cell" onclick="handleLogout()">Log Out</div>
+            </div>
+        </div>
+
+        <nav id="main-nav">
+            <div class="nav-item active" onclick="switchTab('chats', this)"><i class="fas fa-comment"></i><span>Chats</span></div>
+            <div class="nav-item" onclick="switchTab('contacts', this)"><i class="fas fa-address-book"></i><span>Contacts</span></div>
+            <div class="nav-item" onclick="switchTab('discover', this)"><i class="far fa-compass"></i><span>Discover</span></div>
+            <div class="nav-item" onclick="switchTab('me', this)"><i class="far fa-user"></i><span>Me</span></div>
+        </nav>
+
+    </div> <script>
+        // --- Login / Logout Logic ---
+        function handleLogin() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('tab-chats').classList.add('active');
+            if (window.visualViewport) { document.body.style.height = window.visualViewport.height + 'px'; }
+        }
+
+        function handleLogout() {
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+            document.querySelectorAll('.sub-page').forEach(p => p.classList.remove('open'));
+            switchTab('chats', document.querySelector('.nav-item')); 
+        }
+
+        // --- Mobile Viewport Fix ---
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                document.body.style.height = window.visualViewport.height + 'px';
+                if(document.getElementById('chat-detail').classList.contains('open')) {
+                    setTimeout(scrollToBottom, 100);
+                }
+            });
+        }
+
+        // --- Navigation ---
+        const headerTitle = document.getElementById('header-title');
+        const popupMenu = document.getElementById('plus-menu');
+        function switchTab(tabName, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            el.classList.add('active');
+            if(tabName === 'chats') headerTitle.innerText = 'WeChat';
+            else if(tabName === 'contacts') headerTitle.innerText = 'Contacts';
+            else if(tabName === 'discover') headerTitle.innerText = 'Discover';
+            else if(tabName === 'me') headerTitle.innerText = '';
+        }
+        function toggleMenu(e) { if(e) e.stopPropagation(); popupMenu.classList.toggle('show'); }
+        document.body.addEventListener('click', () => { popupMenu.classList.remove('show'); });
+        function openSubPage(pageId) { document.getElementById(pageId).classList.add('open'); }
+        function closeSubPage(pageId) { document.getElementById(pageId).classList.remove('open'); }
+
+        // --- Google Search ---
+        const googleInput = document.getElementById('google-search');
+        googleInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.trim() !== '') {
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(this.value.trim())}`, '_blank');
+                this.value = '';
+            }
+        });
+
+        // --- Change Name ---
+        function changeName() {
+            const currentName = document.getElementById('profile-display-name').innerText;
+            const newName = prompt("Change Name", currentName);
+            if (newName && newName.trim() !== "") {
+                document.getElementById('me-display-name').innerText = newName;
+                document.getElementById('profile-display-name').innerText = newName;
+                document.querySelector('.login-username').innerText = newName;
+            }
+        }
+
+        // --- Chat & AI Logic (V7/V5 Full Logic) ---
+        const chatInput = document.getElementById('chat-input-field');
+        const chatContainer = document.getElementById('chat-container');
+        const previewMsg = document.getElementById('chat-msg-preview');
+        const previewTime = document.getElementById('chat-time-preview');
+        let lastContext = null;
+
+        function openChat() { openSubPage('chat-detail'); scrollToBottom(); chatInput.focus(); }
+
+        chatInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && this.value.trim() !== '') {
+                handleUserMessage(this.value.trim());
+                this.value = '';
+            }
+        });
+
+        function handleUserMessage(text) {
+            addBubble(text, 'me');
+            previewMsg.innerText = text;
+            previewTime.innerText = 'Now';
+            const delay = 600 + Math.random() * 1000;
+            setTimeout(() => {
+                const aiResponse = generateAdvancedResponse(text);
+                addBubble(aiResponse, 'other');
+                previewMsg.innerText = aiResponse;
+            }, delay);
+        }
+
+        function addBubble(text, type) {
+            const row = document.createElement('div');
+            row.className = `bubble-row ${type}`;
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'bubble-avatar';
+            if(type === 'other') {
+                avatarDiv.style.background = '#2C2C2C';
+                avatarDiv.innerHTML = '<i class="fas fa-robot" style="color:#07C160; font-size:20px;"></i>';
+            } else { avatarDiv.style.background = '#444'; }
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'bubble-content';
+            contentDiv.innerText = text;
+            row.appendChild(avatarDiv); row.appendChild(contentDiv);
+            chatContainer.appendChild(row);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() { chatContainer.scrollTop = chatContainer.scrollHeight; }
+
+        // --- AI Brain (Full Version) ---
+        const jokeLibrary = [
+            "Why do programmers prefer dark mode? Because light attracts bugs.",
+            "Parallel lines have so much in common. It’s a shame they’ll never meet.",
+            "I told my wife she was drawing her eyebrows too high. She looked surprised.",
+            "Why don't scientists trust atoms? Because they make up everything!",
+            "How do you comfort a JavaScript bug? You console it.",
+            "What do you call a fake noodle? An impasta.",
+            "Singing in the shower is fun until you get soap in your mouth. Then it's a soap opera."
+        ];
+        function getRandomJoke() { return jokeLibrary[Math.floor(Math.random() * jokeLibrary.length)]; }
+
+        function generateAdvancedResponse(input) {
+            const lowerInput = input.toLowerCase();
+            // Context Awareness
+            if (lastContext === 'joke' && (lowerInput.includes('another') || lowerInput.includes('more') || lowerInput.includes('again'))) {
+                return "Sure, here is another one: \n" + getRandomJoke();
+            }
+            // Joke
+            if (lowerInput.includes('joke') || lowerInput.includes('laugh') || lowerInput.includes('funny')) {
+                lastContext = 'joke';
+                return "Here is a joke for you: \n" + getRandomJoke();
+            }
+            // Greeting
+            if (lowerInput.includes('hello') || lowerInput.includes('hi') || lowerInput.includes('hey')) {
+                lastContext = 'greeting';
+                return "Hello User! 👋 I'm your AI assistant. I can tell jokes or chat with you.";
+            }
+            // Emotion
+            if (lowerInput.includes('sad') || lowerInput.includes('tired') || lowerInput.includes('bored')) {
+                lastContext = 'emotion';
+                return "I'm sorry to hear that. Want a joke to cheer you up?";
+            }
+            // Identity
+            if (lowerInput.includes('who are you')) return "I am a WeChat Clone AI, fully upgraded!";
+            
+            // Default
+            lastContext = null;
+            const fallbacks = [
+                "That's interesting! Tell me more.",
+                "I'm listening. 👀",
+                "Hmm, I see.",
+                "I'm just a simple AI, but I think that's cool."
+            ];
+            return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+        }
+    </script>
+</body>
+</html>
