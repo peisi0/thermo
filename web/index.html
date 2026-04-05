@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>化学离子多邻国大挑战</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+
+    <style>
+        :root {
+            --duo-green: #58cc02;
+            --duo-green-dark: #46a302;
+            --duo-red: #ff4b4b;
+            --duo-red-dark: #ea2b2b;
+            --duo-blue: #1cb0f6;
+            --duo-blue-dark: #1899d6;
+            --duo-gray: #e5e5e5;
+            --duo-gray-text: #afafaf;
+            --duo-text: #3c3c3c;
+            --card-border: #e5e5e5;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            background-color: #fff;
+            color: var(--duo-text);
+            touch-action: manipulation; 
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding-top: 10px;
+        }
+
+        .progress-container {
+            flex-grow: 1;
+            height: 16px;
+            background-color: var(--duo-gray);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--duo-green);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .hearts {
+            color: var(--duo-red);
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .question-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 120px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--duo-text);
+            line-height: 1.4;
+        }
+
+        .target-box {
+            border: 2px solid var(--card-border);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100px;
+            box-shadow: 0 4px 0 var(--duo-gray);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .option-card {
+            background: #fff;
+            border: 2px solid var(--card-border);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 0 var(--duo-gray);
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 70px;
+            user-select: none;
+        }
+        
+        .option-card.text-option {
+             font-size: 1.1rem;
+        }
+
+        .option-card:active {
+            box-shadow: none;
+            transform: translateY(4px);
+        }
+
+        .option-card.selected {
+            border-color: var(--duo-blue);
+            background-color: #ddf4ff;
+            box-shadow: 0 4px 0 var(--duo-blue-dark);
+        }
+
+        .option-card.correct {
+            border-color: var(--duo-green);
+            background-color: #d7ffb8;
+            box-shadow: 0 4px 0 var(--duo-green-dark);
+            pointer-events: none;
+        }
+
+        .option-card.wrong {
+            border-color: var(--duo-red);
+            background-color: #ffdfe0;
+            box-shadow: 0 4px 0 var(--duo-red-dark);
+            pointer-events: none;
+        }
+
+        .typing-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .typing-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.8rem;
+            border: 2px solid var(--card-border);
+            border-radius: 15px;
+            box-shadow: 0 4px 0 var(--duo-gray);
+            outline: none;
+            text-align: center;
+            font-family: monospace;
+            box-sizing: border-box;
+            background-color: #fcfcfc;
+        }
+        
+        .typing-input:focus {
+             border-color: var(--duo-blue);
+             background-color: #fff;
+        }
+
+        .typing-hint {
+            color: var(--duo-gray-text);
+            font-size: 0.95rem;
+            text-align: center;
+            line-height: 1.5;
+        }
+        
+        .typing-input.correct {
+            border-color: var(--duo-green);
+            background-color: #d7ffb8;
+            color: var(--duo-green-dark);
+             box-shadow: 0 4px 0 var(--duo-green-dark);
+        }
+
+        .typing-input.wrong {
+            border-color: var(--duo-red);
+            background-color: #ffdfe0;
+             color: var(--duo-red-dark);
+             box-shadow: 0 4px 0 var(--duo-red-dark);
+        }
+
+        .footer-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            border-top: 2px solid var(--duo-gray);
+            padding: 20px 0;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .footer-content {
+            width: 100%;
+            max-width: 600px;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .feedback-msg {
+            display: none;
+            flex-direction: column;
+            flex-grow: 1;
+            padding-right: 20px;
+        }
+        
+        .feedback-title {
+            font-weight: bold;
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+        
+        .feedback-detail {
+            font-size: 1rem;
+        }
+
+        .check-btn {
+            background-color: var(--duo-green);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 var(--duo-green-dark);
+            min-width: 120px;
+            text-align: center;
+            user-select: none;
+            transition: all 0.1s;
+        }
+
+        .check-btn:active {
+            box-shadow: none;
+            transform: translateY(4px);
+        }
+
+        .check-btn.disabled {
+            background-color: var(--duo-gray);
+            color: #afafaf;
+            box-shadow: none;
+            cursor: default;
+            transform: none;
+        }
+
+        body.status-correct .footer-area {
+            background-color: #d7ffb8;
+            border-color: #d7ffb8;
+        }
+        body.status-correct .feedback-msg {
+            display: flex;
+            color: var(--duo-green-dark);
+        }
+        body.status-correct .check-btn {
+            background-color: var(--duo-green);
+            box-shadow: 0 4px 0 var(--duo-green-dark);
+        }
+
+        body.status-wrong .footer-area {
+            background-color: #ffdfe0;
+            border-color: #ffdfe0;
+        }
+        body.status-wrong .feedback-msg {
+            display: flex;
+            color: var(--duo-red-dark);
+        }
+        body.status-wrong .check-btn {
+            background-color: var(--duo-red);
+            box-shadow: 0 4px 0 var(--duo-red-dark);
+        }
+        
+        .katex { font-size: 1.2em; }
+
+        @media (max-width: 480px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="hearts">❤️ <span id="lives">5</span></div>
+    </header>
+
+    <div class="question-area" id="quiz-area">
+        </div>
+</div>
+
+<div class="footer-area" id="footer">
+    <div class="footer-content">
+        <div class="feedback-msg" id="feedback-msg">
+            <div class="feedback-title" id="feedback-title"></div>
+            <div class="feedback-detail" id="feedback-detail"></div>
+        </div>
+        <button class="check-btn disabled" id="check-btn">检查</button>
+    </div>
+</div>
+
+<script>
+    const anions = [
+        { name: "hydride ion", formula: "\\text{H}^{-}" },
+        { name: "chloride ion", formula: "\\text{Cl}^{-}" },
+        { name: "bromide ion", formula: "\\text{Br}^{-}" },
+        { name: "iodide ion", formula: "\\text{I}^{-}" },
+        { name: "hydroxide ion", formula: "\\text{OH}^{-}" },
+        { name: "nitrate ion", formula: "\\text{NO}_{3}^{-}" },
+        { name: "nitrite ion", formula: "\\text{NO}_{2}^{-}" },
+        { name: "hydrogencarbonate ion", formula: "\\text{HCO}_{3}^{-}" },
+        { name: "hydrogensulphate ion", formula: "\\text{HSO}_{4}^{-}" },
+        { name: "cyanide ion", formula: "\\text{CN}^{-}" },
+        { name: "permanganate ion", formula: "\\text{MnO}_{4}^{-}" },
+        { name: "chlorate ion", formula: "\\text{ClO}_{3}^{-}" },
+        { name: "hypochlorite ion", formula: "\\text{ClO}^{-}" },
+        { name: "oxide ion", formula: "\\text{O}^{2-}" },
+        { name: "sulphide ion", formula: "\\text{S}^{2-}" },
+        { name: "sulphate ion", formula: "\\text{SO}_{4}^{2-}" },
+        { name: "sulphite ion", formula: "\\text{SO}_{3}^{2-}" },
+        { name: "thiosulphate ion", formula: "\\text{S}_{2}\\text{O}_{3}^{2-}" },
+        { name: "silicate ion", formula: "\\text{SiO}_{3}^{2-}" },
+        { name: "carbonate ion", formula: "\\text{CO}_{3}^{2-}" },
+        { name: "chromate ion", formula: "\\text{CrO}_{4}^{2-}" },
+        { name: "dichromate ion", formula: "\\text{Cr}_{2}\\text{O}_{7}^{2-}" },
+        { name: "nitride ion", formula: "\\text{N}^{3-}" },
+        { name: "phosphide ion", formula: "\\text{P}^{3-}" },
+        { name: "phosphate ion", formula: "\\text{PO}_{4}^{3-}" }
+    ];
+
+    const cations = [
+        { name: "sodium ion", formula: "\\text{Na}^{+}" },
+        { name: "potassium ion", formula: "\\text{K}^{+}" },
+        { name: "copper(I) ion", formula: "\\text{Cu}^{+}" },
+        { name: "silver ion", formula: "\\text{Ag}^{+}" },
+        { name: "mercury(I) ion", formula: "\\text{Hg}^{+}" }, 
+        { name: "hydrogen ion", formula: "\\text{H}^{+}" },
+        { name: "ammonium ion", formula: "\\text{NH}_{4}^{+}" },
+        { name: "magnesium ion", formula: "\\text{Mg}^{2+}" },
+        { name: "calcium ion", formula: "\\text{Ca}^{2+}" },
+        { name: "barium ion", formula: "\\text{Ba}^{2+}" },
+        { name: "lead(II) ion", formula: "\\text{Pb}^{2+}" },
+        { name: "iron(II) ion", formula: "\\text{Fe}^{2+}" },
+        { name: "cobalt(II) ion", formula: "\\text{Co}^{2+}" },
+        { name: "nickel(II) ion", formula: "\\text{Ni}^{2+}" },
+        { name: "manganese(II) ion", formula: "\\text{Mn}^{2+}" },
+        { name: "copper(II) ion", formula: "\\text{Cu}^{2+}" },
+        { name: "zinc ion", formula: "\\text{Zn}^{2+}" },
+        { name: "mercury(II) ion", formula: "\\text{Hg}^{2+}" },
+        { name: "aluminium ion", formula: "\\text{Al}^{3+}" },
+        { name: "iron(III) ion", formula: "\\text{Fe}^{3+}" },
+        { name: "chromium(III) ion", formula: "\\text{Cr}^{3+}" }
+    ];
+
+    const allIons = [...anions, ...cations];
+
+    let currentQuestion = null;
+    let selectedOptionIndex = null;
+    let hasChecked = false;
+    let currentQuestionNum = 0;
+    const totalQuestions = 15;
+    let lives = 5;
+    
+    const Q_TYPE = {
+        MC_NAME_TO_FORMULA: 0,
+        MC_FORMULA_TO_NAME: 1,
+        TYPING_FORMULA: 2
+    };
+
+    const quizArea = document.getElementById('quiz-area');
+    const checkBtn = document.getElementById('check-btn');
+    const feedbackMsg = document.getElementById('feedback-msg');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const feedbackDetail = document.getElementById('feedback-detail');
+    const body = document.body;
+    const progressBar = document.getElementById('progress-bar');
+    const livesSpan = document.getElementById('lives');
+    const footer = document.getElementById('footer');
+
+    function renderFormula(latexString) {
+        try {
+            return katex.renderToString(latexString, {
+                throwOnError: false,
+                displayMode: false
+            });
+        } catch (e) {
+            return latexString;
+        }
+    }
+
+    // === CRITICAL FIX: Enhanced Normalization Logic ===
+    function normalizeFormulaForTyping(latex) {
+        return latex
+            .replace(/\\text/g, '')     // Remove \text command
+            .replace(/[\{\}\^_\\]/g, '') // Remove all braces, carets, underscores, backslashes
+            .trim()
+            .toLowerCase();
+    }
+
+    function getRandomItem(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function initGame() {
+        currentQuestionNum = 0;
+        lives = 5;
+        livesSpan.innerText = lives;
+        footer.style.display = 'flex';
+        updateProgress();
+        nextQuestion();
+    }
+
+    function generateQuestion() {
+        const target = getRandomItem(allIons);
+        const rand = Math.random();
+        let type;
+        if (rand < 0.3) type = Q_TYPE.MC_NAME_TO_FORMULA;
+        else if (rand < 0.6) type = Q_TYPE.MC_FORMULA_TO_NAME;
+        else type = Q_TYPE.TYPING_FORMULA;
+
+        let questionData = {
+            type: type,
+            target: target,
+        };
+
+        if (type !== Q_TYPE.TYPING_FORMULA) {
+             let options = [target];
+             const targetCharge = target.formula.match(/\^\{(\d*[+-])\}/)?.[1] || "";
+             let potentialDistractors = allIons.filter(ion => ion !== target);
+             let sameChargeDistractors = potentialDistractors.filter(ion => {
+                 const charge = ion.formula.match(/\^\{(\d*[+-])\}/)?.[1] || "";
+                 return charge === targetCharge && charge !== "";
+             });
+
+            while (options.length < 4 && sameChargeDistractors.length > 0) {
+                 const randomIndex = Math.floor(Math.random() * sameChargeDistractors.length);
+                 options.push(sameChargeDistractors.splice(randomIndex, 1)[0]);
+            }
+            while (options.length < 4) {
+                let distractor = getRandomItem(potentialDistractors);
+                 if (!options.includes(distractor)) {
+                    options.push(distractor);
+                 }
+            }
+            questionData.options = shuffleArray(options);
+        }
+        return questionData;
+    }
+
+    function renderQuestion() {
+        if (currentQuestionNum >= totalQuestions) {
+            showEndScreen(true);
+            return;
+        }
+
+        if (lives <= 0) {
+            showEndScreen(false);
+            return;
+        }
+
+        currentQuestion = generateQuestion();
+        selectedOptionIndex = null;
+        hasChecked = false;
+        resetUI();
+
+        let questionHTML = '';
+        
+        if (currentQuestion.type === Q_TYPE.MC_NAME_TO_FORMULA) {
+            questionHTML += `<h1>请选择 <b>${currentQuestion.target.name}</b> 的化学式</h1>`;
+            questionHTML += `<div class="options-grid">`;
+            currentQuestion.options.forEach((opt, index) => {
+                questionHTML += `
+                    <div class="option-card formula-option" onclick="selectMCOption(${index})" id="opt-${index}">
+                        ${renderFormula(opt.formula)}
+                    </div>
+                `;
+            });
+            questionHTML += `</div>`;
+
+        } else if (currentQuestion.type === Q_TYPE.MC_FORMULA_TO_NAME) {
+            const renderedTarget = renderFormula(currentQuestion.target.formula);
+            questionHTML += `<h1>请选择这个离子的名称</h1>`;
+            questionHTML += `<div class="target-box">${renderedTarget}</div>`;
+            questionHTML += `<div class="options-grid">`;
+            currentQuestion.options.forEach((opt, index) => {
+                questionHTML += `
+                    <div class="option-card text-option" onclick="selectMCOption(${index})" id="opt-${index}">
+                        ${opt.name}
+                    </div>
+                `;
+            });
+            questionHTML += `</div>`;
+            
+        } else if (currentQuestion.type === Q_TYPE.TYPING_FORMULA) {
+             questionHTML += `<h1>请拼写出 <b>${currentQuestion.target.name}</b> 的化学式</h1>`;
+             questionHTML += `
+                <div class="typing-area">
+                    <input type="text" class="typing-input" id="typing-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="例如: SO42-">
+                    <div class="typing-hint">提示：直接输入字母和数字，无需上标下标 (例如: sulphate ion → so42-)</div>
+                </div>
+             `;
+        }
+
+        quizArea.innerHTML = questionHTML;
+
+        if (currentQuestion.type === Q_TYPE.TYPING_FORMULA) {
+            const inputEl = document.getElementById('typing-input');
+            inputEl.focus();
+            inputEl.addEventListener('input', (e) => {
+                 if (e.target.value.trim().length > 0) {
+                      checkBtn.classList.remove('disabled');
+                 } else {
+                      checkBtn.classList.add('disabled');
+                 }
+            });
+            
+            inputEl.addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') {
+                    e.preventDefault(); 
+                    if(!checkBtn.classList.contains('disabled')) {
+                        checkBtn.click();
+                    }
+                }
+            });
+        }
+    }
+
+    function selectMCOption(index) {
+        if (hasChecked) return;
+        document.querySelectorAll('.option-card').forEach(el => el.classList.remove('selected'));
+        document.getElementById(`opt-${index}`).classList.add('selected');
+        selectedOptionIndex = index;
+        checkBtn.classList.remove('disabled');
+    }
+
+    checkBtn.addEventListener('click', handleCheckBtnClick);
+
+    function handleCheckBtnClick() {
+        if (checkBtn.classList.contains('disabled')) return;
+
+        if (!hasChecked) {
+            checkAnswer();
+        } else {
+            nextQuestion();
+        }
+    }
+
+    function checkAnswer() {
+        hasChecked = true;
+        let isCorrect = false;
+        let correctAnswerText = "";
+
+        if (currentQuestion.type !== Q_TYPE.TYPING_FORMULA) {
+            const selectedOpt = currentQuestion.options[selectedOptionIndex];
+            isCorrect = selectedOpt === currentQuestion.target;
+            const selectedEl = document.getElementById(`opt-${selectedOptionIndex}`);
+
+            if (isCorrect) {
+                selectedEl.classList.add('correct');
+            } else {
+                selectedEl.classList.add('wrong');
+                const correctIndex = currentQuestion.options.indexOf(currentQuestion.target);
+                document.getElementById(`opt-${correctIndex}`).classList.add('correct');
+                
+                if (currentQuestion.type === Q_TYPE.MC_NAME_TO_FORMULA) {
+                     correctAnswerText = renderFormula(currentQuestion.target.formula);
+                } else {
+                     correctAnswerText = currentQuestion.target.name;
+                }
+            }
+        } 
+        else {
+            const inputEl = document.getElementById('typing-input');
+            const userValue = inputEl.value.trim().toLowerCase();
+            const targetNormalized = normalizeFormulaForTyping(currentQuestion.target.formula);
+            
+            // Debug log to console in case you need to inspect
+            console.log("User:", userValue, "Target:", targetNormalized);
+
+            isCorrect = userValue === targetNormalized;
+            
+            inputEl.disabled = true;
+            if (isCorrect) {
+                inputEl.classList.add('correct');
+            } else {
+                inputEl.classList.add('wrong');
+                correctAnswerText = renderFormula(currentQuestion.target.formula);
+            }
+        }
+
+        if (isCorrect) {
+            body.classList.add('status-correct');
+            feedbackTitle.innerText = getRandomItem(["非常棒！", "正确！", "完美！"]);
+            feedbackDetail.innerHTML = "";
+            currentQuestionNum++;
+            updateProgress();
+        } else {
+            body.classList.add('status-wrong');
+            feedbackTitle.innerText = "答错了";
+            feedbackDetail.innerHTML = `正确答案是： <b style="font-size: 1.2em">${correctAnswerText}</b>`;
+            lives--;
+            livesSpan.innerText = lives;
+            if (navigator.vibrate) navigator.vibrate(200);
+        }
+        checkBtn.innerText = "继续";
+    }
+
+    function nextQuestion() {
+        renderQuestion();
+    }
+
+    function resetUI() {
+        body.classList.remove('status-correct', 'status-wrong');
+        checkBtn.classList.add('disabled');
+        checkBtn.innerText = "检查";
+        feedbackMsg.style.display = 'none';
+        footer.style.display = 'flex';
+    }
+
+    function updateProgress() {
+        const pct = (currentQuestionNum / totalQuestions) * 100;
+        progressBar.style.width = `${pct}%`;
+    }
+
+    function showEndScreen(victory) {
+        const title = victory ? "练习完成！" : "生命值耗尽";
+        const color = victory ? "var(--duo-green)" : "var(--duo-red)";
+        const emoji = victory ? "🎉" : "💔";
+        const msg = victory ? `你成功完成了 ${totalQuestions} 道强化练习！` : "别灰心，复习一下再来！";
+        
+        quizArea.innerHTML = `
+            <div style="text-align:center; padding-top: 50px; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <h1 style="color:${color}; font-size: 2rem;">${title}</h1>
+                <div style="font-size: 6rem; margin: 20px 0;">${emoji}</div>
+                <p style="font-size: 1.2rem; margin-bottom: 40px;">${msg}</p>
+                <button class="check-btn" onclick="initGame()" style="width: auto; font-size: 1.3rem; padding: 20px 40px;">${victory ? '再来一局' : '重新挑战'}</button>
+            </div>
+        `;
+        footer.style.display = 'none';
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(initGame, 100);
+    });
+
+</script>
+
+</body>
+</html>
