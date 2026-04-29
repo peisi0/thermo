@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthy Habits vs. Healthy Lifestyle</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .slide {
+            width: 90%;
+            max-width: 1100px;
+            height: 80%;
+            max-height: 650px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            display: none;
+            flex-direction: column;
+            position: relative;
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide.active {
+            display: flex;
+            animation: slideIn 0.6s forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .accent-bar {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 6px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+
+        h1, h2 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+
+        .cite {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: auto;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 1rem;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .btn {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem 1.5rem;
+            border-radius: 99px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            background: #f1f5f9;
+            transform: translateY(-2px);
+        }
+
+        .progress-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e2e8f0;
+        }
+
+        .progress-dot.active {
+            background: #3b82f6;
+            width: 24px;
+            border-radius: 10px;
+        }
+
+        .highlight {
+            color: #3b82f6;
+        }
+
+        .myth-card {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .fact-card {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slide-container">
+        <!-- Slide 1: Title -->
+        <div class="slide active" id="slide-1">
+            <div class="accent-bar"></div>
+            <div class="flex flex-col items-center justify-center h-full text-center">
+                <span class="text-blue-600 font-bold tracking-widest uppercase mb-4">Holistic Wellness</span>
+                <h1 class="text-6xl mb-6">Rethinking <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Health & Fitness</span></h1>
+                <p class="text-xl text-gray-500 max-w-2xl leading-relaxed">
+                    Why your "good habits" might not be enough for a healthy lifestyle.
+                </p>
+                <div class="mt-12 flex items-center gap-4 text-sm text-gray-400">
+                    <div class="h-px w-12 bg-gray-300"></div>
+                    <span>Presentation by Senior Consultant</span>
+                    <div class="h-px w-12 bg-gray-300"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: The Social Jetlag Trap -->
+        <div class="slide" id="slide-2">
+            <h2 class="text-3xl mb-8">The <span class="highlight">Social Jetlag</span> Trap</h2>
+            <div class="grid grid-cols-2 gap-8 items-center">
+                <div>
+                    <p class="text-lg mb-6 leading-relaxed">Many people try to "catch up" on sleep during the weekend to pay off their weekday sleep debt.</p>
+                    <div class="myth-card">
+                        <p class="font-bold text-red-600">The Myth:</p>
+                        <p>Sleeping extra on weekends fixes the fatigue of a 6-hour weekday schedule.</p>
+                    </div>
+                    <div class="fact-card">
+                        <p class="font-bold text-green-600">The Reality:</p>
+                        <p>Irregular sleep-wake schedules disrupt your body's sense of time, leading to lower glucose disposal rates.</p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-8 rounded-xl border border-gray-100 flex flex-col justify-center items-center text-center">
+                    <i class="fa-solid fa-clock-rotate-left text-5xl text-blue-500 mb-4"></i>
+                    <h3 class="text-xl font-bold mb-2">Social Jetlag</h3>
+                    <p class="text-gray-500 text-sm">Discrepancy between biological time and social time.</p>
+                </div>
+            </div>
+            <div class="cite">Source: BMJ Open Diabetes Research & Care - Weekday sleep duration and estimated glucose disposal rate.</div>
+        </div>
+
+        <!-- Slide 3: Habits ≠ Lifestyle -->
+        <div class="slide" id="slide-3">
+            <h2 class="text-3xl mb-8">Healthy Habits <span class="highlight">≠</span> Healthy Lifestyle</h2>
+            <div class="flex flex-col h-full">
+                <p class="text-xl text-gray-600 mb-8 italic">"A healthy lifestyle is a multidimensional result, not a single behavior checklist."</p>
+                
+                <div class="grid grid-cols-3 gap-6">
+                    <div class="p-6 border rounded-xl bg-blue-50/30">
+                        <i class="fa-solid fa-heart-pulse text-blue-500 mb-3 text-2xl"></i>
+                        <h4 class="font-bold mb-2">Physical Activity</h4>
+                        <p class="text-sm text-gray-500">Exercise must be tailored to your specific health status (e.g., heart conditions).</p>
+                    </div>
+                    <div class="p-6 border rounded-xl bg-purple-50/30">
+                        <i class="fa-solid fa-brain text-purple-500 mb-3 text-2xl"></i>
+                        <h4 class="font-bold mb-2">Psychosocial Status</h4>
+                        <p class="text-sm text-gray-500">Stress and social connection are just as vital as physical fitness.</p>
+                    </div>
+                    <div class="p-6 border rounded-xl bg-indigo-50/30">
+                        <i class="fa-solid fa-seedling text-indigo-500 mb-3 text-2xl"></i>
+                        <h4 class="font-bold mb-2">Environment</h4>
+                        <p class="text-sm text-gray-500">Your surroundings and lifestyle context define the success of your habits.</p>
+                    </div>
+                </div>
+                <div class="cite">Reference: American Journal of Lifestyle Medicine & Scientific Reports.</div>
+            </div>
+        </div>
+
+        <!-- Slide 4: The Power of Consistency -->
+        <div class="slide" id="slide-4">
+            <h2 class="text-3xl mb-8">The Foundation: <span class="highlight">Regularity</span></h2>
+            <div class="grid grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <p class="text-lg leading-relaxed">Even the highest-quality diets fail to improve metabolic health if your timing is inconsistent.</p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-check-circle text-green-500 mt-1"></i>
+                            <span><b>Consistency is Key:</b> Irregularity cancels out the benefits of diet and exercise.</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i class="fa-solid fa-circle-xmark text-red-400 mt-1"></i>
+                            <span><b>Intermittent Health:</b> Sporadic "good habits" do not equate to a healthy life.</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="relative">
+                    <div class="w-full h-48 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center p-8 text-white">
+                        <div class="text-center">
+                            <div class="text-5xl font-black mb-2">CORE</div>
+                            <div class="text-xs uppercase tracking-widest opacity-80">Stability & Routine</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="cite">Reference: American Journal of Clinical Nutrition (2024).</div>
+        </div>
+
+        <!-- Slide 5: Context & Nuance -->
+        <div class="slide" id="slide-5">
+            <h2 class="text-3xl mb-8">Perspective: <span class="highlight">Habit vs. Hazard</span></h2>
+            <div class="grid grid-cols-2 gap-8">
+                <div class="p-8 border rounded-2xl">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-coffee text-amber-700"></i> The Coffee Example
+                    </h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Many view caffeine as "unhealthy," but for most, it doesn't break a healthy lifestyle. Black coffee is rich in antioxidants and can lower chronic disease risk.
+                    </p>
+                </div>
+                <div class="p-8 border rounded-2xl">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> The Context Rule
+                    </h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Intense training is a "good habit," but for someone with heart disease, it's a hazard. Habit effectiveness is 100% dependent on personal health context.
+                    </p>
+                </div>
+            </div>
+            <div class="mt-8 text-center bg-gray-50 p-4 rounded-lg">
+                <p class="font-semibold text-gray-700 uppercase tracking-wide">Takeaway: Don't just follow rules. Understand your context.</p>
+            </div>
+        </div>
+
+        <!-- Slide 6: Summary & Call to Action -->
+        <div class="slide" id="slide-6">
+            <h2 class="text-3xl mb-8">Summary: <span class="highlight">A Holistic Vision</span></h2>
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div class="p-6 bg-blue-50 rounded-xl">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">Consistency</div>
+                    <p class="text-xs text-gray-500">Regular routines beat sporadic bursts of health.</p>
+                </div>
+                <div class="p-6 bg-blue-50 rounded-xl">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">Synergy</div>
+                    <p class="text-xs text-gray-500">Sleep, diet, and stress management must work together.</p>
+                </div>
+                <div class="p-6 bg-blue-50 rounded-xl">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">Integration</div>
+                    <p class="text-xs text-gray-500">Lifestyle is shaped by your environment and social ties.</p>
+                </div>
+            </div>
+
+            <div class="mt-12 text-center">
+                <h3 class="text-2xl font-bold mb-4">The Better Question:</h3>
+                <p class="text-3xl text-indigo-600 font-black italic">"Is my lifestyle consistent?"</p>
+                <div class="mt-8 text-gray-400">Thank You for Listening.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="controls">
+        <button class="btn" onclick="prevSlide()"><i class="fa-solid fa-chevron-left"></i></button>
+        <div class="flex gap-2" id="progress-dots">
+            <!-- Dots added by JS -->
+        </div>
+        <button class="btn" onclick="nextSlide()"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 6;
+
+        function updateDots() {
+            const container = document.getElementById('progress-dots');
+            container.innerHTML = '';
+            for (let i = 1; i <= totalSlides; i++) {
+                const dot = document.createElement('div');
+                dot.className = `progress-dot ${i === currentSlide ? 'active' : ''}`;
+                container.appendChild(dot);
+            }
+        }
+
+        function showSlide(n) {
+            document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+            document.getElementById(`slide-${n}`).classList.add('active');
+            currentSlide = n;
+            updateDots();
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) showSlide(currentSlide - 1);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        // Initialize dots
+        updateDots();
+    </script>
+</body>
+</html>
