@@ -231,6 +231,25 @@
             font-weight: 800;
             margin: 0;
         }
+        .example-box {
+            margin-top: 14px;
+            text-align: left;
+        }
+        .example-title {
+            font-size: 12px;
+            color: #58cc02;
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .example-list {
+            margin: 0;
+            padding-left: 18px;
+            color: #4b4b4b;
+            font-size: 14px;
+            line-height: 1.5;
+        }
 
         /* Footer & Duolingo Action Buttons */
         .footer-action {
@@ -385,25 +404,17 @@
 
     <div id="screen-filter" class="screen active">
         <div>
-            <div class="header-title">选择复习单元</div>
-            <div class="header-subtitle">请选择一个或多个单元开始高效率记忆</div>
+            <div class="header-title">选择学习难度</div>
+            <div class="header-subtitle">先选择难度，再开始单词记忆</div>
             
             <div class="filter-group">
-                <div class="unit-card selected" data-unit="Unit 5" onclick="toggleUnit(this)">
-                    <div class="unit-card-title">Unit 5</div>
-                    <div class="unit-card-count">新兴科技与多变未来</div>
+                <div class="unit-card" data-difficulty="primary" onclick="toggleDifficulty(this)">
+                    <div class="unit-card-title">小学难度</div>
+                    <div class="unit-card-count">基础高频词汇</div>
                 </div>
-                <div class="unit-card selected" data-unit="Unit 6" onclick="toggleUnit(this)">
-                    <div class="unit-card-title">Unit 6</div>
-                    <div class="unit-card-count">自然生态与环境保护</div>
-                </div>
-                <div class="unit-card selected" data-unit="Unit 7" onclick="toggleUnit(this)">
-                    <div class="unit-card-title">Unit 7</div>
-                    <div class="unit-card-count">社会群体、问题与情感</div>
-                </div>
-                <div class="unit-card selected" data-unit="Unit 8" onclick="toggleUnit(this)">
-                    <div class="unit-card-title">Unit 8</div>
-                    <div class="unit-card-count">职场专业、能力与职责</div>
+                <div class="unit-card selected" data-difficulty="middle" onclick="toggleDifficulty(this)">
+                    <div class="unit-card-title">中学难度</div>
+                    <div class="unit-card-count">进阶词汇 + 例句训练</div>
                 </div>
             </div>
         </div>
@@ -431,6 +442,10 @@
                 <div id="meaning-container" class="meaning-box">
                     <div class="meaning-title">详细解释</div>
                     <div id="card-meaning" class="meaning-text">释义</div>
+                    <div id="example-container" class="example-box" style="display:none;">
+                        <div class="example-title">例句</div>
+                        <ul id="card-examples" class="example-list"></ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -477,6 +492,29 @@
 </div>
 
 <script>
+    const primaryVocabularyList = [
+        {"word": "space", "type": "n.", "unit": "小学难度", "meaning": "空间；太空"},
+        {"word": "book", "type": "n.", "unit": "小学难度", "meaning": "书"},
+        {"word": "water", "type": "n.", "unit": "小学难度", "meaning": "水"},
+        {"word": "school", "type": "n.", "unit": "小学难度", "meaning": "学校"},
+        {"word": "friend", "type": "n.", "unit": "小学难度", "meaning": "朋友"},
+        {"word": "family", "type": "n.", "unit": "小学难度", "meaning": "家庭"},
+        {"word": "teacher", "type": "n.", "unit": "小学难度", "meaning": "老师"},
+        {"word": "student", "type": "n.", "unit": "小学难度", "meaning": "学生"},
+        {"word": "happy", "type": "adj.", "unit": "小学难度", "meaning": "开心的"},
+        {"word": "small", "type": "adj.", "unit": "小学难度", "meaning": "小的"},
+        {"word": "big", "type": "adj.", "unit": "小学难度", "meaning": "大的"},
+        {"word": "clean", "type": "adj.", "unit": "小学难度", "meaning": "干净的"},
+        {"word": "run", "type": "v.", "unit": "小学难度", "meaning": "跑"},
+        {"word": "read", "type": "v.", "unit": "小学难度", "meaning": "阅读"},
+        {"word": "write", "type": "v.", "unit": "小学难度", "meaning": "写"},
+        {"word": "play", "type": "v.", "unit": "小学难度", "meaning": "玩"},
+        {"word": "eat", "type": "v.", "unit": "小学难度", "meaning": "吃"},
+        {"word": "drink", "type": "v.", "unit": "小学难度", "meaning": "喝"},
+        {"word": "today", "type": "adv.", "unit": "小学难度", "meaning": "今天"},
+        {"word": "always", "type": "adv.", "unit": "小学难度", "meaning": "总是"}
+    ];
+
     const fullVocabularyList = [
         {"word": "artificial intelligence", "type": "n. phr.", "unit": "Unit 5", "meaning": "人工智能"},
         {"word": "augmented reality", "type": "n. phr.", "unit": "Unit 5", "meaning": "增强现实"},
@@ -741,25 +779,69 @@
     
     let activeWords = [];
     let currentIndex = 0;
+    let currentDifficulty = 'middle';
     
     let knownCount = 0;
     let unknownCount = 0;
     let needReviewWords = [];
 
-    function toggleUnit(element) {
-        element.classList.toggle('selected');
+    function toggleDifficulty(element) {
+        document.querySelectorAll('.unit-card').forEach(card => card.classList.remove('selected'));
+        element.classList.add('selected');
+    }
+
+    function capitalizeText(text) {
+        return text.charAt(0).toUpperCase() + text.slice(1);
+    }
+
+    function generateExamples(word, type) {
+        const cleanWord = word.toLowerCase();
+        if (type.startsWith('v.')) {
+            return [
+                `We need to ${cleanWord} this task step by step.`,
+                `They decided to ${cleanWord} it after school.`
+            ];
+        }
+        if (type.startsWith('adj.')) {
+            return [
+                `It was a ${cleanWord} idea in today's class.`,
+                `The teacher said the plan looked ${cleanWord}.`
+            ];
+        }
+        if (type.startsWith('adv.')) {
+            return [
+                `She spoke ${cleanWord} during the meeting.`,
+                `They worked ${cleanWord} to finish early.`
+            ];
+        }
+        return [
+            `${capitalizeText(word)} is often discussed in class.`,
+            `Can you make a sentence with "${word}"?`
+        ];
+    }
+
+    function buildMiddleVocabularyList() {
+        return fullVocabularyList.map(item => ({
+            ...item,
+            examples: generateExamples(item.word, item.type)
+        }));
     }
 
     function startLearning() {
-        const selectedElements = document.querySelectorAll('.unit-card.selected');
-        const selectedUnits = Array.from(selectedElements).map(el => el.getAttribute('data-unit'));
+        const selectedDifficulty = document.querySelector('.unit-card.selected');
         
-        if (selectedUnits.length === 0) {
-            alert('请至少选择一个单元进行复习哦！');
+        if (!selectedDifficulty) {
+            alert('请先选择学习难度哦！');
             return;
         }
+
+        currentDifficulty = selectedDifficulty.getAttribute('data-difficulty');
         
-        activeWords = fullVocabularyList.filter(item => selectedUnits.includes(item.unit));
+        if (currentDifficulty === 'primary') {
+            activeWords = [...primaryVocabularyList];
+        } else {
+            activeWords = buildMiddleVocabularyList();
+        }
         shuffleArray(activeWords);
         
         currentIndex = 0;
@@ -795,6 +877,16 @@
         document.getElementById('card-type').textContent = currentItem.type;
         document.getElementById('card-unit').textContent = currentItem.unit;
         document.getElementById('card-meaning').textContent = currentItem.meaning;
+
+        const exampleContainer = document.getElementById('example-container');
+        const exampleList = document.getElementById('card-examples');
+        if (currentDifficulty === 'middle' && Array.isArray(currentItem.examples) && currentItem.examples.length > 0) {
+            exampleList.innerHTML = currentItem.examples.map(example => `<li>${example}</li>`).join('');
+            exampleContainer.style.display = 'block';
+        } else {
+            exampleList.innerHTML = '';
+            exampleContainer.style.display = 'none';
+        }
         
         document.getElementById('meaning-container').classList.remove('show');
         
