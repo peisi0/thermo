@@ -261,7 +261,7 @@ window.ENGS3_VOCAB_DATA = {
         {"word": "enhance", "type": "v.", "unit": "Unit 8", "meaning": "增强/提高"},
         {"word": "expand", "type": "v.", "unit": "Unit 8", "meaning": "扩大/拓展"},
         {"word": "implement", "type": "v.", "unit": "Unit 8", "meaning": "实施/执行"},
-        {"word": "innovative", "type": "v.", "unit": "Unit 8", "meaning": "创新"},
+        {"word": "innovate", "type": "v.", "unit": "Unit 8", "meaning": "创新"},
         {"word": "intern", "type": "v.", "unit": "Unit 8", "meaning": "实习"},
         {"word": "launch", "type": "v.", "unit": "Unit 8", "meaning": "发射/投放/发起"},
         {"word": "maintain", "type": "v.", "unit": "Unit 8", "meaning": "维持/保养"},
